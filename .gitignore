@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.log
+*.json
+knowledge_base/chromadb/
+knowledge_base/memory.json
+NexBIM_Report_*.pdf
+nexbim_state_*.json
+nexbim_*.log
