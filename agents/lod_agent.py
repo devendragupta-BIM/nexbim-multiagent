@@ -35,8 +35,8 @@ LOD_REQUIREMENTS = {
     "IfcDuctSegment": {
         "required_lod": 300,
         "required_attributes": [
-            "FlowRate", "Size", "Material", "InsulationThickness",
-            "SystemType"
+            "FlowRate", "Size", "Material",
+            "InsulationThickness", "SystemType"
         ]
     },
     "IfcPipeSegment": {
@@ -60,15 +60,6 @@ LOD_REQUIREMENTS = {
     }
 }
 
-LOD_SCORE_MAP = {
-    0: 100,
-    1: 90,
-    2: 75,
-    3: 60,
-    4: 40,
-    5: 20
-}
-
 
 class LODAgent:
     def __init__(self, state_manager: StateManager):
@@ -78,14 +69,16 @@ class LODAgent:
     def _check_lod(self, element: Dict) -> Dict[str, Any]:
         element_type = element.get("type", "")
         requirements = LOD_REQUIREMENTS.get(element_type)
-
         if not requirements:
             return {"has_violation": False}
 
         props = element.get("properties", {})
         required_attrs = requirements["required_attributes"]
         required_lod = requirements["required_lod"]
-        missing = [a for a in required_attrs if a not in props or not props[a]]
+        missing = [
+            a for a in required_attrs
+            if a not in props or not props[a]
+        ]
 
         if not missing:
             return {"has_violation": False}
@@ -114,59 +107,81 @@ class LODAgent:
         }
 
     def run(self, elements: List[Dict[str, Any]]) -> Dict[str, Any]:
-        logger.info(f"[{self.name}] Starting LOD check on {len(elements)} elements")
+        logger.info(
+            f"[{self.name}] Starting LOD check on {len(elements)} elements"
+        )
         self.state.update(pipeline_stage="lod_check")
 
         violations = []
-        critical = []
-        major = []
-        minor = []
+        critical_count = 0
+        major_count = 0
+        minor_count = 0
 
         for element in elements:
             result = self._check_lod(element)
             if result["has_violation"]:
+
+                elem_name = (
+                    element.get("name") or
+                    element.get("Name") or
+                    element.get("id", "Unknown")
+                )
+                elem_discipline = (
+                    element.get("discipline") or
+                    element.get("Discipline") or
+                    "unknown"
+                )
+
                 violation = LODViolation(
                     element_id=element["id"],
+                    element_name=elem_name,
                     element_type=element["type"],
+                    discipline=elem_discipline,
                     required_lod=result["required_lod"],
                     actual_lod=result["actual_lod"],
                     missing_attributes=result["missing_attributes"],
-                    severity=result["severity"]
+                    severity=result["severity"],
+                    completeness=result["completeness_percent"]
                 )
                 self.state.add_lod_violation(violation)
+
                 violations.append({
-                    "element_name": element["name"],
+                    "element_name": elem_name,
                     "element_type": element["type"],
-                    "discipline": element["discipline"],
+                    "discipline": elem_discipline,
                     "required_lod": result["required_lod"],
                     "actual_lod": result["actual_lod"],
                     "missing_attributes": result["missing_attributes"],
                     "severity": result["severity"],
                     "completeness": result["completeness_percent"]
                 })
+
                 if result["severity"] == "critical":
-                    critical.append(violation)
+                    critical_count += 1
                 elif result["severity"] == "major":
-                    major.append(violation)
+                    major_count += 1
                 else:
-                    minor.append(violation)
+                    minor_count += 1
 
         self.state.log_agent_action(
             self.name,
             "check_lod",
             (f"Found {len(violations)} LOD violations — "
-             f"Critical: {len(critical)}, "
-             f"Major: {len(major)}, "
-             f"Minor: {len(minor)}"),
+             f"Critical: {critical_count}, "
+             f"Major: {major_count}, "
+             f"Minor: {minor_count}"),
             "success"
         )
 
-        logger.info(f"[{self.name}] Complete — {len(violations)} LOD violations found")
+        logger.info(
+            f"[{self.name}] Complete — {len(violations)} LOD violations"
+        )
+
         return {
             "success": True,
             "total_violations": len(violations),
-            "critical": len(critical),
-            "major": len(major),
-            "minor": len(minor),
+            "critical": critical_count,
+            "major": major_count,
+            "minor": minor_count,
             "violations": violations
         }
