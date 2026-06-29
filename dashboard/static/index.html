@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexBIM — Multi-Agent BIM Coordination</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue-dark: #0F2444;
+    --blue-mid:  #1B3A6B;
+    --blue-acc:  #2E86AB;
+    --green:     #27AE60;
+    --red:       #E74C3C;
+    --orange:    #F39C12;
+    --gray-bg:   #F5F7FA;
+    --gray-card: #FFFFFF;
+    --gray-bdr:  #E2E8F0;
+    --text-dark: #1A202C;
+    --text-mid:  #4A5568;
+    --text-mute: #A0AEC0;
+    --radius:    10px;
+    --shadow:    0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--gray-bg);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--blue-dark);
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .nav-brand span {
+    color: var(--blue-acc);
+  }
+  .nav-badge {
+    background: var(--blue-acc);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .nav-right {
+    color: var(--text-mute);
+    font-size: 0.8rem;
+  }
+
+  /* LAYOUT */
+  .app {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* SIDEBAR */
+  aside {
+    background: white;
+    border-right: 1px solid var(--gray-bdr);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .sidebar-section h3 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-mute);
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+  .form-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-mid);
+  }
+  input[type="text"] {
+    border: 1px solid var(--gray-bdr);
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    outline: none;
+    transition: border 0.2s;
+    width: 100%;
+  }
+  input[type="text"]:focus {
+    border-color: var(--blue-acc);
+    box-shadow: 0 0 0 3px rgba(46,134,171,0.15);
+  }
+
+  .upload-zone {
+    border: 2px dashed var(--gray-bdr);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--gray-bg);
+  }
+  .upload-zone:hover {
+    border-color: var(--blue-acc);
+    background: #EBF5FA;
+  }
+  .upload-zone.active {
+    border-color: var(--green);
+    background: #EBF9F1;
+  }
+  .upload-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  .upload-zone p {
+    font-size: 0.8rem;
+    color: var(--text-mute);
+    margin-top: 0.3rem;
+  }
+  .upload-zone strong {
+    color: var(--blue-acc);
+    font-size: 0.85rem;
+  }
+  input[type="file"] { display: none; }
+
+  .demo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    margin-top: 0.5rem;
+    cursor: pointer;
+  }
+  .demo-toggle input { cursor: pointer; accent-color: var(--blue-acc); }
+
+  .run-btn {
+    width: 100%;
+    background: var(--blue-mid);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 0.85rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+    margin-top: auto;
+  }
+  .run-btn:hover { background: var(--blue-acc); transform: translateY(-1px); }
+  .run-btn:active { transform: translateY(0); }
+  .run-btn:disabled { background: var(--text-mute); cursor: not-allowed; transform: none; }
+
+  .agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .agent-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--gray-bg);
+  }
+  .agent-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gray-bdr);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .agent-dot.done { background: var(--green); }
+  .agent-dot.running {
+    background: var(--orange);
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* MAIN */
+  main {
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  /* WELCOME */
+  .welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  .welcome-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--blue-mid), var(--blue-acc));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    box-shadow: var(--shadow);
+  }
+  .welcome h2 {
+    font-size: 1.8rem;
+    color: var(--blue-dark);
+  }
+  .welcome p {
+    color: var(--text-mid);
+    max-width: 480px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    max-width: 600px;
+  }
+  .feature-card {
+    background: white;
+    border: 1px solid var(--gray-bdr);
+    border-radius: 10px;
+    padding: 1rem;
+    font-size: 0.82rem;
+    color: var(--text-mid);
+  }
+  .feature-card strong {
+    display: block;
+    color: var(--text-dark);
+    margin-bottom: 0.3rem;
+    font-size: 0.88rem;
+  }
+
+  /* PROGRESS */
+  .progress-section {
+    background: white;
+    border: 1px solid var(--gray-bdr);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .progress-section h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--blue-dark);
+    margin-bottom: 1rem;
+  }
+  .progress-bar-wrap {
+    background: var(--gray-bg);
+    border-radius: 20px;
+    height: 6px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue-mid), var(--blue-acc));
+    border-radius: 20px;
+    transition: width 0.5s ease;
+  }
+  .stage-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+  .stage-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    background: var(--gray-bg);
+    color: var(--text-mute);
+    border: 1px solid var(--gray-bdr);
+    transition: all 0.3s;
+  }
+  .stage-item.done {
+    background: #EBF9F1;
+    color: #1A6B3C;
+    border-color: #A8E6C4;
+  }
+  .stage-item.running {
+    background: #FFF8EC;
+    color: #7B5200;
+    border-color: #FAD89A;
+  }
+  .stage-icon { font-size: 1rem; }
+
+  /* KPI GRID */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .kpi-card {
+    background: white;
+    border: 1px solid var(--gray-bdr);
+    border-radius: var(--radius);
+    padding: 1.2rem 0.75rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .kpi-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+  .kpi-label {
+    font-size: 0.72rem;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  /* SECTION */
+  .section {
+    background: white;
+    border: 1px solid var(--gray-bdr);
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .section-header {
+    background: var(--blue-dark);
+    color: white;
+    padding: 0.9rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-body { padding: 1.2rem; }
+
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+  }
+  th {
+    background: #F0F4F8;
+    color: var(--text-mid);
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid var(--gray-bdr);
+  }
+  td {
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid #F5F7FA;
+    color: var(--text-dark);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #FAFBFC; }
+
+  /* BADGE */
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .badge-critical { background: #FDECEA; color: #C0392B; }
+  .badge-major    { background: #FEF9EC; color: #B7770D; }
+  .badge-minor    { background: #EBF9F1; color: #1E8449; }
+  .badge-resolved { background: #EBF9F1; color: #1E8449; }
+  .badge-success  { background: #EBF9F1; color: #1E8449; }
+  .badge-error    { background: #FDECEA; color: #C0392B; }
+
+  /* CLASH CARD */
+  .clash-card {
+    border: 1px solid var(--gray-bdr);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .clash-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1.2rem;
+    border-bottom: 1px solid var(--gray-bdr);
+  }
+  .clash-card-header.critical { background: #FEF5F5; border-left: 4px solid var(--red); }
+  .clash-card-header.major    { background: #FFFBF0; border-left: 4px solid var(--orange); }
+  .clash-card-header.minor    { background: #F0FBF5; border-left: 4px solid var(--green); }
+  .clash-id { font-weight: 700; font-size: 0.9rem; color: var(--blue-dark); }
+  .clash-body {
+    padding: 1rem 1.2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .clash-field label {
+    font-size: 0.72rem;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .clash-field span {
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    line-height: 1.4;
+  }
+  .clash-field.full { grid-column: 1 / -1; }
+
+  /* LOG */
+  .log-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--gray-bg);
+    font-size: 0.82rem;
+  }
+  .log-item:last-child { border-bottom: none; }
+  .log-time { color: var(--text-mute); min-width: 65px; font-family: monospace; }
+  .log-agent { font-weight: 700; color: var(--blue-mid); min-width: 120px; }
+  .log-result { color: var(--text-mid); flex: 1; line-height: 1.4; }
+
+  /* DOWNLOAD */
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--blue-mid);
+    color: white;
+    padding: 0.75rem 1.8rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+  }
+  .download-btn:hover { background: var(--blue-acc); transform: translateY(-1px); }
+
+  /* IMPACT ROW */
+  .impact-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .impact-card {
+    background: white;
+    border: 1px solid var(--gray-bdr);
+    border-radius: var(--radius);
+    padding: 1rem 1.2rem;
+    box-shadow: var(--shadow);
+  }
+  .impact-label {
+    font-size: 0.72rem;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+  .impact-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--blue-dark);
+  }
+  .impact-sub {
+    font-size: 0.78rem;
+    color: var(--text-mute);
+    margin-top: 2px;
+  }
+
+  #results { display: none; }
+  #welcome { display: flex; }
+  #pipeline-progress { display: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    🏗️ Nex<span>BIM</span>
+    <span class="nav-badge">v1.0</span>
+  </div>
+  <div class="nav-right">Multi-Agent BIM Coordination System · Powered by Groq LLaMA 3.3 70B</div>
+</nav>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="sidebar-section">
+      <h3>Project Setup</h3>
+      <div class="form-group">
+        <label>Project Name</label>
+        <input type="text" id="project-name"
+               placeholder="e.g. Office Tower — Phase 1"
+               value="BIM Coordination Project">
+      </div>
+
+      <div class="form-group">
+        <label>BIM Model (IFC)</label>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+          <div class="upload-icon">📁</div>
+          <strong>Click to upload IFC file</strong>
+          <p>or drag and drop here</p>
+          <p id="file-name" style="color:var(--green);margin-top:4px;"></p>
+        </div>
+        <input type="file" id="file-input" accept=".ifc" onchange="handleFile(this)">
+        <label class="demo-toggle">
+          <input type="checkbox" id="demo-mode" checked>
+          Use demo data (no file needed)
+        </label>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Agent Pipeline</h3>
+      <div class="agent-list">
+        <div class="agent-item">
+          <div class="agent-dot" id="dot-intake"></div>
+          Intake Agent
+        </div>
+        <div class="agent-item">
+          <div class="agent-dot" id="dot-classification"></div>
+          Classifier Agent
+        </div>
+        <div class="agent-item">
+          <div class="agent-dot" id="dot-resolution"></div>
+          Resolver Agent (AI)
+        </div>
+        <div class="agent-item">
+          <div class="agent-dot" id="dot-compliance"></div>
+          Compliance Agent
+        </div>
+        <div class="agent-item">
+          <div class="agent-dot" id="dot-lod"></div>
+          LOD Agent
+        </div>
+        <div class="agent-item">
+          <div class="agent-dot" id="dot-report"></div>
+          Reporter Agent
+        </div>
+      </div>
+    </div>
+
+    <button class="run-btn" id="run-btn" onclick="runPipeline()">
+      🚀 Run NexBIM Pipeline
+    </button>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- WELCOME -->
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">🏗️</div>
+      <h2>NexBIM Multi-Agent System</h2>
+      <p>Enter your project name, upload an IFC file or use demo mode, then click Run Pipeline to start autonomous BIM coordination.</p>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <strong>🔍 Clash Detection</strong>
+          Geometric and clearance clash analysis across all disciplines
+        </div>
+        <div class="feature-card">
+          <strong>🤖 AI Resolution</strong>
+          LLaMA 3.3 70B generates specific fixes with IS/ISO standards
+        </div>
+        <div class="feature-card">
+          <strong>📋 Compliance</strong>
+          IS 456, IS 800, IS 1893, NBC 2016, ISO 19650 checks
+        </div>
+        <div class="feature-card">
+          <strong>📐 LOD Check</strong>
+          Validates Level of Development for every element
+        </div>
+        <div class="feature-card">
+          <strong>📊 Health Score</strong>
+          Real-time model health scoring out of 100
+        </div>
+        <div class="feature-card">
+          <strong>📄 PDF Report</strong>
+          Professional coordination report download
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="pipeline-progress">
+      <div class="progress-section">
+        <h3>⚙️ Pipeline Executing</h3>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div class="stage-grid">
+          <div class="stage-item" id="stage-intake">
+            <span class="stage-icon">⬜</span> Model Intake
+          </div>
+          <div class="stage-item" id="stage-classification">
+            <span class="stage-icon">⬜</span> Clash Detection
+          </div>
+          <div class="stage-item" id="stage-resolution">
+            <span class="stage-icon">⬜</span> AI Resolution
+          </div>
+          <div class="stage-item" id="stage-compliance">
+            <span class="stage-icon">⬜</span> Compliance Check
+          </div>
+          <div class="stage-item" id="stage-lod">
+            <span class="stage-icon">⬜</span> LOD Validation
+          </div>
+          <div class="stage-item" id="stage-report">
+            <span class="stage-icon">⬜</span> Report Generation
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results">
+
+      <!-- KPI -->
+      <div class="kpi-grid" id="kpi-grid"></div>
+
+      <!-- IMPACT -->
+      <div class="impact-row" id="impact-row"></div>
+
+      <!-- CLASHES -->
+      <div class="section">
+        <div class="section-header">🔴 Clash Detection &amp; AI Resolutions</div>
+        <div class="section-body" id="clash-body"></div>
+      </div>
+
+      <!-- COMPLIANCE -->
+      <div class="section">
+        <div class="section-header">📋 Compliance Check Results</div>
+        <div class="section-body">
+          <table id="compliance-table">
+            <thead>
+              <tr>
+                <th>Standard</th>
+                <th>Clause</th>
+                <th>Severity</th>
+                <th>Description</th>
+                <th>AI Recommendation</th>
+              </tr>
+            </thead>
+            <tbody id="compliance-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LOD -->
+      <div class="section">
+        <div class="section-header">📐 Level of Development (LOD) Violations</div>
+        <div class="section-body">
+          <table id="lod-table">
+            <thead>
+              <tr>
+                <th>Element</th>
+                <th>Type</th>
+                <th>Required LOD</th>
+                <th>Actual LOD</th>
+                <th>Complete</th>
+                <th>Severity</th>
+                <th>Missing Attributes</th>
+              </tr>
+            </thead>
+            <tbody id="lod-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LOG -->
+      <div class="section">
+        <div class="section-header">📜 Agent Execution Log</div>
+        <div class="section-body" id="log-body"></div>
+      </div>
+
+      <!-- DOWNLOAD -->
+      <div class="section">
+        <div class="section-header">📄 Coordination Report</div>
+        <div class="section-body" style="display:flex;align-items:center;gap:1rem;">
+          <button class="download-btn" id="download-btn">
+            ⬇️ Download PDF Report
+          </button>
+          <span style="font-size:0.82rem;color:var(--text-mute);">
+            Professional BIM coordination report with all findings
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+let currentJobId = null;
+let selectedFile = null;
+let pollInterval = null;
+
+const STAGES = [
+  "intake", "classification", "resolution",
+  "compliance", "lod", "report"
+];
+const STAGE_PROGRESS = {
+  intake: 15, classification: 30, resolution: 50,
+  compliance: 65, lod: 80, report: 95, done: 100
+};
+
+function handleFile(input) {
+  if (input.files[0]) {
+    selectedFile = input.files[0];
+    document.getElementById("file-name").textContent = selectedFile.name;
+    document.getElementById("upload-zone").classList.add("active");
+    document.getElementById("demo-mode").checked = false;
+  }
+}
+
+function setStage(stageName, state) {
+  const el = document.getElementById(`stage-${stageName}`);
+  const dot = document.getElementById(`dot-${stageName}`);
+  if (!el) return;
+  el.className = `stage-item ${state}`;
+  if (state === "done") {
+    el.querySelector(".stage-icon").textContent = "✅";
+    if (dot) { dot.classList.remove("running"); dot.classList.add("done"); }
+  } else if (state === "running") {
+    el.querySelector(".stage-icon").textContent = "⚙️";
+    if (dot) dot.classList.add("running");
+  }
+}
+
+function updateProgress(stage, complete) {
+  const pct = STAGE_PROGRESS[stage] || 0;
+  document.getElementById("progress-fill").style.width = pct + "%";
+
+  STAGES.forEach(s => {
+    if (complete.includes(s)) setStage(s, "done");
+    else if (s === stage) setStage(s, "running");
+  });
+}
+
+async function runPipeline() {
+  const projectName = document.getElementById("project-name").value.trim();
+  if (!projectName) { alert("Please enter a project name"); return; }
+
+  const btn = document.getElementById("run-btn");
+  btn.disabled = true;
+  btn.textContent = "⚙️ Running...";
+
+  document.getElementById("welcome").style.display = "none";
+  document.getElementById("results").style.display = "none";
+  document.getElementById("pipeline-progress").style.display = "block";
+
+  STAGES.forEach(s => {
+    const el = document.getElementById(`stage-${s}`);
+    if (el) {
+      el.className = "stage-item";
+      el.querySelector(".stage-icon").textContent = "⬜";
+    }
+    const dot = document.getElementById(`dot-${s}`);
+    if (dot) { dot.classList.remove("done", "running"); }
+  });
+  document.getElementById("progress-fill").style.width = "0%";
+
+  const formData = new FormData();
+  formData.append("project_name", projectName);
+  const demoMode = document.getElementById("demo-mode").checked;
+  if (!demoMode && selectedFile) {
+    formData.append("file", selectedFile);
+  }
+
+  try {
+    const res = await fetch("/run", { method: "POST", body: formData });
+    const data = await res.json();
+    currentJobId = data.job_id;
+    pollInterval = setInterval(pollStatus, 1200);
+  } catch (e) {
+    alert("Failed to start pipeline: " + e.message);
+    resetBtn();
+  }
+}
+
+async function pollStatus() {
+  if (!currentJobId) return;
+  try {
+    const res = await fetch(`/status/${currentJobId}`);
+    const data = await res.json();
+
+    updateProgress(data.stage, data.stages_complete || []);
+
+    if (data.status === "complete") {
+      clearInterval(pollInterval);
+      document.getElementById("progress-fill").style.width = "100%";
+      STAGES.forEach(s => setStage(s, "done"));
+      setTimeout(() => renderResults(data.result), 400);
+      resetBtn();
+    } else if (data.status === "error") {
+      clearInterval(pollInterval);
+      alert("Pipeline error: " + data.error);
+      resetBtn();
+    }
+  } catch (e) {
+    console.error("Poll error:", e);
+  }
+}
+
+function resetBtn() {
+  const btn = document.getElementById("run-btn");
+  btn.disabled = false;
+  btn.textContent = "🚀 Run NexBIM Pipeline";
+}
+
+function severityBadge(sev) {
+  return `<span class="badge badge-${sev}">${sev.toUpperCase()}</span>`;
+}
+
+function renderResults(result) {
+  document.getElementById("pipeline-progress").style.display = "none";
+  document.getElementById("results").style.display = "block";
+
+  const s = result.summary;
+  const health = s.health_score || 0;
+  const healthColor = health >= 75 ? "#27AE60" : health >= 50 ? "#F39C12" : "#E74C3C";
+
+  document.getElementById("kpi-grid").innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-value" style="color:#1B3A6B;">${s.total_elements}</div>
+      <div class="kpi-label">Elements</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" style="color:#E74C3C;">${s.total_clashes}</div>
+      <div class="kpi-label">Clashes Found</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" style="color:#27AE60;">${s.resolved_clashes}</div>
+      <div class="kpi-label">Resolved</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" style="color:#F39C12;">${s.compliance_issues}</div>
+      <div class="kpi-label">Compliance Issues</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" style="color:#E74C3C;">${s.lod_violations}</div>
+      <div class="kpi-label">LOD Violations</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value" style="color:${healthColor};">${health}</div>
+      <div class="kpi-label">Health Score /100</div>
+    </div>
+  `;
+
+  const cost = s.total_cost_impact || 0;
+  const days = s.schedule_impact_days || 0;
+  const disciplines = (s.disciplines || []).join(", ");
+  document.getElementById("impact-row").innerHTML = `
+    <div class="impact-card">
+      <div class="impact-label">💰 Total Cost Impact</div>
+      <div class="impact-value">Rs.${cost.toLocaleString("en-IN")}</div>
+      <div class="impact-sub">Estimated coordination cost</div>
+    </div>
+    <div class="impact-card">
+      <div class="impact-label">📅 Schedule Impact</div>
+      <div class="impact-value">${days} days</div>
+      <div class="impact-sub">Working days affected</div>
+    </div>
+    <div class="impact-card">
+      <div class="impact-label">🏗️ Disciplines</div>
+      <div class="impact-value" style="font-size:1rem;padding-top:4px;">${disciplines}</div>
+      <div class="impact-sub">Project ID: ${s.project_id}</div>
+    </div>
+  `;
+
+  const clashBody = document.getElementById("clash-body");
+  const resolutions = result.resolutions || [];
+  if (resolutions.length === 0) {
+    clashBody.innerHTML = `<p style="color:var(--green);font-weight:600;">✅ No clashes found</p>`;
+  } else {
+    clashBody.innerHTML = resolutions.map(r => {
+      const res = r.resolution || {};
+      const sev = r.severity || "minor";
+      return `
+        <div class="clash-card">
+          <div class="clash-card-header ${sev}">
+            <span class="clash-id">${r.clash_id}</span>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+              ${severityBadge(sev)}
+              <span class="badge badge-resolved">RESOLVED</span>
+            </div>
+          </div>
+          <div class="clash-body">
+            <div class="clash-field full">
+              <label>Elements in Conflict</label>
+              <span><strong>${r.element_1}</strong> vs <strong>${r.element_2}</strong></span>
+            </div>
+            <div class="clash-field full">
+              <label>AI Resolution</label>
+              <span>${res.resolution_summary || "—"}</span>
+            </div>
+            <div class="clash-field">
+              <label>Action Required</label>
+              <span>${res.action_required || "—"}</span>
+            </div>
+            <div class="clash-field">
+              <label>Alternative Solution</label>
+              <span>${res.alternative_solution || "—"}</span>
+            </div>
+            <div class="clash-field">
+              <label>Responsible Discipline</label>
+              <span>${(res.responsible_discipline || "—").toUpperCase()}</span>
+            </div>
+            <div class="clash-field">
+              <label>Reference Standard</label>
+              <span>${res.reference_standard || "—"}</span>
+            </div>
+            <div class="clash-field">
+              <label>Cost Impact</label>
+              <span>Rs.${(res.estimated_cost_impact_inr || 0).toLocaleString("en-IN")}</span>
+            </div>
+            <div class="clash-field">
+              <label>Schedule Impact</label>
+              <span>${res.estimated_schedule_impact_days || 0} working days</span>
+            </div>
+            <div class="clash-field full">
+              <label>Technical Notes</label>
+              <span>${res.notes || "—"}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  const compBody = document.getElementById("compliance-body");
+  const compList = s.compliance_issues_list || [];
+  if (compList.length === 0) {
+    compBody.innerHTML = `<tr><td colspan="5" style="color:var(--green);font-weight:600;">✅ No compliance issues found</td></tr>`;
+  } else {
+    compBody.innerHTML = compList.map(issue => `
+      <tr>
+        <td><strong>${issue.standard}</strong></td>
+        <td>${issue.clause}</td>
+        <td>${severityBadge(issue.severity)}</td>
+        <td>${issue.description}</td>
+        <td>${issue.recommendation}</td>
+      </tr>
+    `).join("");
+  }
+
+  const lodBody = document.getElementById("lod-body");
+  const lodList = s.lod_violations_list || [];
+  if (lodList.length === 0) {
+    lodBody.innerHTML = `<tr><td colspan="7" style="color:var(--green);font-weight:600;">✅ All elements meet LOD requirements</td></tr>`;
+  } else {
+    lodBody.innerHTML = lodList.map(v => `
+      <tr>
+        <td><strong>${v.element_name}</strong></td>
+        <td>${v.element_type}</td>
+        <td>${v.required_lod}</td>
+        <td>${v.actual_lod}</td>
+        <td>${v.completeness}%</td>
+        <td>${severityBadge(v.severity)}</td>
+        <td style="color:var(--red);font-size:0.78rem;">${(v.missing_attributes || []).join(", ")}</td>
+      </tr>
+    `).join("");
+  }
+
+  const logBody = document.getElementById("log-body");
+  const logs = s.agent_logs || [];
+  logBody.innerHTML = logs.map(log => {
+    const ts = log.timestamp.includes("T")
+      ? log.timestamp.split("T")[1].slice(0, 8)
+      : log.timestamp;
+    const status = (log.status || "").toUpperCase();
+    const badge = `<span class="badge badge-${status === "SUCCESS" ? "success" : "error"}">${status}</span>`;
+    return `
+      <div class="log-item">
+        <span class="log-time">${ts}</span>
+        <span class="log-agent">${log.agent}</span>
+        <span class="log-result">${log.result}</span>
+        ${badge}
+      </div>
+    `;
+  }).join("");
+
+  document.getElementById("download-btn").onclick = () => {
+    window.open(`/report/${currentJobId}`, "_blank");
+  };
+}
+</script>
+</body>
+</html>
