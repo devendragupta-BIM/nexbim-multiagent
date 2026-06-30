@@ -27,8 +27,6 @@ class Orchestrator:
         self.agent_messages: List[Dict[str, Any]] = []
 
     def think(self, message: str, agent: str = "Orchestrator"):
-        """Records a visible reasoning step — this is what makes
-        the system observable instead of a black box."""
         entry = {
             "timestamp": datetime.now().isoformat(),
             "agent": agent,
@@ -39,10 +37,6 @@ class Orchestrator:
 
     def agent_speaks(self, from_agent: str, to_agent: str,
                      message: str, data: Dict = None):
-        """Records one agent passing information or a finding
-        to another agent. This is the agent-to-agent communication
-        layer that distinguishes real multi-agent systems from
-        sequential function calls."""
         entry = {
             "timestamp": datetime.now().isoformat(),
             "from": from_agent,
@@ -54,11 +48,6 @@ class Orchestrator:
         logger.info(f"[{from_agent} → {to_agent}] {message}")
 
     def decide_severity_routing(self, clashes: List[Dict]) -> Dict[str, Any]:
-        """The orchestrator looks at what the Classifier found and
-        DECIDES how to proceed — this is real decision-making, not
-        a fixed pipeline. If there are zero critical clashes it can
-        decide to skip deep AI resolution and use fast-path logic
-        to save time and API cost."""
         critical = [c for c in clashes if c["severity"] == "critical"]
         major = [c for c in clashes if c["severity"] == "major"]
 
@@ -93,11 +82,6 @@ class Orchestrator:
 
     def review_resolution_conflict(self, resolution: Dict,
                                    compliance_issues: List[Dict]) -> Dict:
-        """This is real agent-to-agent reasoning: the Orchestrator
-        checks if the Resolver's fix would CREATE a new compliance
-        problem, by cross-referencing with what the Compliance Agent
-        already knows. If yes, it asks the AI to resolve the conflict
-        between two agents' findings."""
         related_issues = [
             i for i in compliance_issues
             if resolution.get("responsible_discipline", "").lower()
@@ -129,31 +113,32 @@ class Orchestrator:
         }
 
     def synthesize_final_verdict(self, summary: Dict[str, Any]) -> str:
-        """The orchestrator's closing statement — a genuine AI-
-        generated executive verdict on the project's coordination
-        health, written specifically for a CEO/PM audience."""
         try:
-            prompt = f"""You are the lead orchestrator AI of a multi-agent
-BIM coordination system. Five specialist agents have just completed
-analysis of a building project. Write a 3-sentence executive verdict
-for a construction company CEO, in a confident, technical, decisive tone.
+            prompt = f"""You are the lead orchestrator AI of NexBIM, a
+multi-agent BIM coordination system. Five specialist agents just
+finished analyzing a building project. Write a verdict for the
+construction company CEO — 3 sentences, decisive and specific,
+written like a senior coordination engineer briefing leadership,
+not a corporate summary. Name the single biggest risk first. Avoid
+generic phrases like "ensure project integrity" or "profitable
+outcome" — be concrete about what happens if nothing is done.
 
 DATA:
 Total elements: {summary.get('total_elements')}
-Clashes found: {summary.get('total_clashes')} (all resolved: {summary.get('resolved_clashes')})
+Clashes found: {summary.get('total_clashes')} (resolved: {summary.get('resolved_clashes')})
 Compliance issues: {summary.get('compliance_issues')}
 LOD violations: {summary.get('lod_violations')}
 Health score: {summary.get('health_score')}/100
 Cost impact: Rs.{summary.get('total_cost_impact', 0):,.0f}
 Schedule impact: {summary.get('schedule_impact_days')} days
 
-Write only the verdict, no preamble, no markdown."""
+Write only the verdict. No preamble, no markdown, no headers."""
 
             response = self.client.chat.completions.create(
                 model=config.GROQ_MODEL,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.3,
-                max_tokens=200
+                temperature=0.4,
+                max_tokens=220
             )
             verdict = response.choices[0].message.content.strip()
             self.think(f"Final verdict synthesized: {verdict}",
