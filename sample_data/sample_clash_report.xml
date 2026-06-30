@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<batchtest name="NexBIM Clash Test" units="m">
+  <clashtests>
+
+    <clashtest name="MEP vs Structure" test_type="hard" status="new">
+      <clashresults>
+
+        <clashresult name="Clash1" status="new" distance="-0.312">
+          <clashpoint>
+            <pos3f x="7.5" y="0.0" z="3.1"/>
+          </clashpoint>
+          <clashobjects>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>142567</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>HVAC-DUCT-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Ducts</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Size</name>
+                <value>600x400mm</value>
+              </objectattribute>
+            </clashobject>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>98234</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>BM-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Structural Framing</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Size</name>
+                <value>W300x500</value>
+              </objectattribute>
+            </clashobject>
+          </clashobjects>
+        </clashresult>
+
+        <clashresult name="Clash2" status="new" distance="-0.075">
+          <clashpoint>
+            <pos3f x="5.0" y="1.0" z="3.0"/>
+          </clashpoint>
+          <clashobjects>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>167823</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>PIPE-CW-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Pipe</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Diameter</name>
+                <value>150mm</value>
+              </objectattribute>
+            </clashobject>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>112456</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>SLAB-01</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Floors</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Thickness</name>
+                <value>150mm</value>
+              </objectattribute>
+            </clashobject>
+          </clashobjects>
+        </clashresult>
+
+        <clashresult name="Clash3" status="new" distance="-0.045">
+          <clashpoint>
+            <pos3f x="10.0" y="2.0" z="3.05"/>
+          </clashpoint>
+          <clashobjects>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>189345</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>PIPE-SS-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Pipe</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Diameter</name>
+                <value>100mm</value>
+              </objectattribute>
+            </clashobject>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>112456</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>SLAB-01</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Floors</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Thickness</name>
+                <value>150mm</value>
+              </objectattribute>
+            </clashobject>
+          </clashobjects>
+        </clashresult>
+
+        <clashresult name="Clash4" status="new" distance="-0.125">
+          <clashpoint>
+            <pos3f x="7.5" y="0.0" z="3.0"/>
+          </clashpoint>
+          <clashobjects>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>142567</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>HVAC-DUCT-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Ducts</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 2</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Size</name>
+                <value>400x300mm</value>
+              </objectattribute>
+            </clashobject>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>98567</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>COL-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Structural Columns</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 2</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Size</name>
+                <value>300x300mm</value>
+              </objectattribute>
+            </clashobject>
+          </clashobjects>
+        </clashresult>
+
+        <clashresult name="Clash5" status="new" distance="-0.089">
+          <clashpoint>
+            <pos3f x="3.0" y="2.5" z="2.8"/>
+          </clashpoint>
+          <clashobjects>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>201234</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>CABLE-TRAY-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Cable Trays</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+            </clashobject>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>167823</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>PIPE-CW-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Pipe</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+            </clashobject>
+          </clashobjects>
+        </clashresult>
+
+      </clashresults>
+    </clashtest>
+
+    <clashtest name="Architecture vs MEP" test_type="clearance" status="new">
+      <clashresults>
+
+        <clashresult name="Clash6" status="new" distance="0.032">
+          <clashpoint>
+            <pos3f x="0.0" y="0.0" z="2.5"/>
+          </clashpoint>
+          <clashobjects>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>301234</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>WALL-EXT-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Walls</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+            </clashobject>
+            <clashobject>
+              <objectattribute>
+                <name>Element ID</name>
+                <value>189345</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Item Name</name>
+                <value>PIPE-SS-001</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Category</name>
+                <value>Pipe</value>
+              </objectattribute>
+              <objectattribute>
+                <name>Level</name>
+                <value>Level 1</value>
+              </objectattribute>
+            </clashobject>
+          </clashobjects>
+        </clashresult>
+
+      </clashresults>
+    </clashtest>
+
+  </clashtests>
+</batchtest>
